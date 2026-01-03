@@ -1,4 +1,4 @@
-<img width="700" height="600" alt="cir" src="https://github.com/user-attachments/assets/b3df861d-b70c-4162-b082-1a9ed0ee50a0" />
+
 
 # Urban Street Networks Dataset
 
@@ -9,3 +9,4 @@ The dataset includes a total of 120 cities with an unbalanced distribution of st
 Each city's data is stored as a serialized NetworkX graph in `.pkl` format within the `city_graphs` folder, including nodes (intersections with coordinates), edges (roads with lengths and geometries), and graph attributes for layout `type` (grid/organic/hybrid) and city `name`.
 
 This dataset is ideal for urban planning analysis, graph theory, or machine learning tasks like layout classification. It was generated via a Python script using OSMnx and NetworkX.
+
