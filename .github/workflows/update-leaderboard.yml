@@ -1,0 +1,25 @@
+name: Update Leaderboard
+
+on:
+  pull_request:
+    paths:
+      - "submissions/*.csv"
+  workflow_dispatch:
+
+jobs:
+  score-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install -r starter_code/requirements.txt
+
+      - name: Update leaderboard
+        run: python leaderboard/update_leaderboard.py
