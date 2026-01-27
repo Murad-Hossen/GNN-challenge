@@ -9,9 +9,13 @@ on:
 jobs:
   score-and-update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -23,3 +27,15 @@ jobs:
 
       - name: Update leaderboard
         run: python leaderboard/update_leaderboard.py
+
+      - name: Commit updated leaderboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep -q "leaderboard/leaderboard.json"; then
+            git add leaderboard/leaderboard.json
+            git commit -m "Update leaderboard results"
+            git push
+          else
+            echo "No leaderboard changes to commit."
+          fi
