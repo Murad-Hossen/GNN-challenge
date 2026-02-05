@@ -1,9 +1,10 @@
 
 <img width="900" height="800" alt="three_cities_networks" src="https://github.com/user-attachments/assets/0bf5f83b-0777-47fa-b76b-81b9d2932cca" />
 
-# City Street Networks Dataset (120 Cities) — Task 3 Challenge
+# City Graph class challenge (120 Cities)
 
-🏆 View Live Leaderboard: [Open leaderboard](https://murad-hossen.github.io/City-Graph-Class-challenge/leaderboard/index.html)
+
+🏆 View Live Leaderboard: [Open leaderboard](https://murad-hossen.github.io/CGCC/)
 
 This dataset comprises street network graphs for 120 diverse cities across continents including North America, South America, Europe, Asia, Africa, Australia & Oceania, and others like the Middle East and Central Asia. The graphs are extracted from OpenStreetMap using OSMnx, focusing on driveable roads within a 500-meter buffer around each city's central point.
 
