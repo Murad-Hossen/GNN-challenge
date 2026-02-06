@@ -4,7 +4,7 @@
 # City Graph class challenge (CGCC)
 
 
-🏆 View Live Leaderboard: [Open leaderboard](https://murad-hossen.github.io/CGCC/)
+🏆 View Live Leaderboard: [Open leaderboard](https://murad-hossen.github.io/CGCC/leaderboard.html)
 
 This dataset comprises street network graphs for 120 diverse cities across continents including North America, South America, Europe, Asia, Africa, Australia & Oceania, and others like the Middle East and Central Asia. The graphs are extracted from OpenStreetMap using OSMnx, focusing on driveable roads within a 500-meter buffer around each city's central point.
 
@@ -66,7 +66,12 @@ Predict labels for every graph in:
 - `gnn_challenge/data/test/`
 
 ### Step 3: Submit
-Create a `submission.csv` in the following format:
+Open a Pull Request that adds:
+
+- `submissions/inbox/<team_name>/<run_id>/predictions.csv`
+- `submissions/inbox/<team_name>/<run_id>/metadata.json`
+
+`predictions.csv` must use this format:
 
 ```csv
 filename,prediction
@@ -74,6 +79,8 @@ Boston_Massachusetts_USA.pkl,2
 Delhi_India.pkl,0
 Turin_Italy.pkl,1
 ...
+
+Submissions are scored automatically on PR open, and the leaderboard updates after merge.
 
 ---
 

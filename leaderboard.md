@@ -1,41 +1,36 @@
 ## Leaderboard Setup
 
-This repo uses a simple static leaderboard rendered from `leaderboard/leaderboard.json`.
+This repo follows the template design:
+- Authoritative data: `leaderboard/leaderboard.csv`
+- Auto-generated Markdown: `leaderboard/leaderboard.md`
+- Interactive UI: `docs/leaderboard.html` (GitHub Pages)
 
 ### How to publish results on GitHub
 
-1. Generate a submission file in `submissions/`
+1. Open a Pull Request that adds:
+   - `submissions/inbox/<team_name>/<run_id>/predictions.csv`
+   - `submissions/inbox/<team_name>/<run_id>/metadata.json`
    - Format: `filename,prediction`
-   - Example: `submissions/baseline_model.csv`
 
-2. Update the leaderboard JSON locally
-   - Run:
-     ```
-     python "leaderboard/update_leaderboard.py"
-     ```
-   - This recomputes scores using `leaderboard/test_labels_hidden.csv` and writes
-     `leaderboard/leaderboard.json`.
+2. Automatic scoring (GitHub Actions)
+   - On PR open, the workflow validates and scores the submission.
+   - Hidden labels are provided via the `TEST_LABELS_CSV` GitHub Secret.
 
-3. Commit and push
-   ```
-   git add "leaderboard/leaderboard.json"
-   git commit -m "Update leaderboard"
-   git push origin main
-   ```
+3. Leaderboard update (on merge)
+   - When the PR is merged, `leaderboard/leaderboard.csv` and
+     `leaderboard/leaderboard.md` are regenerated automatically.
 
 4. View the leaderboard UI
-   - Open `leaderboard/index.html` locally, or
-   - Serve it via GitHub Pages.
+   - Open `docs/leaderboard.html` locally, or
+   - Enable GitHub Pages with source `main` and folder `/docs`.
 
 ### GitHub Pages 
 
 If you want a public web page:
 1. Enable GitHub Pages in the repo settings.
-2. Use the `main` branch and `/leaderboard` folder (if supported), or move the
-   `leaderboard/` contents to the repo root.
+2. Use the `main` branch and `/docs` folder.
 
 ### Important note
 
-The leaderboard score is computed on hidden test labels in
-`leaderboard/test_labels_hidden.csv`. This is different from the validation
-metrics printed in the training notebook.
+Hidden test labels must not be committed to the repo. Use the
+`TEST_LABELS_CSV` GitHub Secret for automatic scoring.

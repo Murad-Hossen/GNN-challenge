@@ -1,6 +1,6 @@
 import os
-import json
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
@@ -8,23 +8,59 @@ from sklearn.metrics import accuracy_score, f1_score
 validation_data_file = "../my_validation_data/validation_data.csv"
 # validation_data = pd.read_csv(validation_data_file) for example
 
-def read_submission_files(submission_dir="../submissions"):
-    submission_files = [f for f in os.listdir(submission_dir) if f.endswith(".csv")]
+SUBMISSIONS_DIR = Path(__file__).resolve().parent.parent / "submissions"
+INBOX_DIR = SUBMISSIONS_DIR / "inbox"
+
+def read_submission_files():
+    submission_files = []
+
+    if SUBMISSIONS_DIR.exists():
+        # Legacy flat submissions/*.csv
+        submission_files.extend(
+            [(SUBMISSIONS_DIR / f).resolve() for f in os.listdir(SUBMISSIONS_DIR) if f.endswith(".csv")]
+        )
+
+    if INBOX_DIR.exists():
+        # New structure: submissions/inbox/<team>/<run>/predictions.csv
+        submission_files.extend([p.resolve() for p in INBOX_DIR.rglob("predictions.csv")])
 
     return submission_files
 
 
-def calculate_scores(submission_file: str):
-    test_labels_file_path = "test_labels_hidden.csv"
-    base_dir = os.path.dirname(__file__)
-    submission_path = os.path.join(base_dir, "..", "submissions", submission_file)
-    validation_path = os.path.join(base_dir, validation_data_file)
-    labels_path = validation_path if os.path.exists(validation_path) else os.path.join(base_dir, test_labels_file_path)
+def _team_name_from_path(path: Path) -> str:
+    parts = path.parts
+    if "inbox" in parts:
+        try:
+            inbox_idx = parts.index("inbox")
+            team = parts[inbox_idx + 1]
+            run_id = parts[inbox_idx + 2]
+            return f"{team}/{run_id}"
+        except (IndexError, ValueError):
+            return path.stem
+    return path.stem
 
-    if not os.path.exists(submission_path):
+
+def calculate_scores(submission_path: Path):
+    base_dir = Path(__file__).resolve().parent
+    submission_path = Path(submission_path).resolve()
+
+    labels_path = os.environ.get("HIDDEN_LABELS_PATH") or os.environ.get("TEST_LABELS_PATH")
+    validation_path = os.environ.get("VALIDATION_DATA_PATH")
+
+    if validation_path and os.path.exists(validation_path):
+        labels_path = validation_path
+    elif not labels_path:
+        # Local fallback paths (do not commit hidden labels)
+        local_candidates = [
+            base_dir / "test_labels_hidden.csv",
+            base_dir.parent / "data" / "test_labels_hidden.csv",
+        ]
+        labels_path = next((str(p) for p in local_candidates if p.exists()), None)
+
+    if not submission_path.exists():
         raise FileNotFoundError(f"Submission file not found: {submission_path}")
-    if not os.path.exists(labels_path):
-        raise FileNotFoundError(f"Labels file not found: {labels_path}")
+    if not labels_path or not os.path.exists(labels_path):
+        raise FileNotFoundError("Labels file not found. Set HIDDEN_LABELS_PATH in CI.")
 
     labels_df = pd.read_csv(labels_path)
     submission_df = pd.read_csv(submission_path)
@@ -66,34 +102,30 @@ def calculate_scores(submission_file: str):
 
 def get_leaderboard_data():
     files = read_submission_files()
-    # get the timestamp of the file creation from its metadata
-    
     scores = []
-    for i in range(len(files)):
-        team_name = files[i].split('.')[0]
-        # get the modified time of the file
-        timestamp = os.path.getmtime(f"../submissions/{files[i]}")
-        # format the timestamp to a readable format
-        timestamp = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
-        team_scores = calculate_scores(files[i])
-        scores.append({
-            "team_name": team_name,
-            **team_scores,
-            "timestamp": timestamp
-        })
-    
+
+    for submission_path in files:
+        submission_path = Path(submission_path)
+        team_name = _team_name_from_path(submission_path)
+        timestamp = datetime.fromtimestamp(submission_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        team_scores = calculate_scores(submission_path)
+        scores.append(
+            {
+                "team_name": team_name,
+                **team_scores,
+                "timestamp": timestamp,
+            }
+        )
+
     scores.sort(key=lambda x: x["validation_f1_score"], reverse=True)
     return scores
 
 if __name__ == "__main__":
     leaderboard_data = get_leaderboard_data()
-    
+
     for team_submission in leaderboard_data:
         print(f"Team: {team_submission['team_name']}")
         print(f"Validation F1 Score: {team_submission['validation_f1_score'] * 100:.2f}%")
         print(f"Validation Accuracy: {team_submission['validation_accuracy'] * 100:.2f}%")
         print(f"Timestamp: {team_submission['timestamp']}")
         print("-" * 50)
-
-
-    open("leaderboard.json", "w").write(json.dumps(leaderboard_data, indent=4))
